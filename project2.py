@@ -66,13 +66,14 @@ def pyr_reconstruct(lp):
     RN[:] = lp[-1]
     del lp[-1]
     for L in lp[::-1]:
-        cv2.imshow('window', RN)
+        cv2.imshow('window', 0.5 + 0.5*(RN / numpy.abs(RN).max()))
+        while cv2.waitKey(5) < 0: pass
+        cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
         while cv2.waitKey(5) < 0: pass
         RNup = numpy.zeros(L.shape, dtype=numpy.float32)
         cv2.pyrUp(RN, RNup)
-        RN = RNup + L
+        RN = RNup + 0.5 + 0.5*(L / numpy.abs(L).max())
 
 pyr_reconstruct(lN)
-
 
 

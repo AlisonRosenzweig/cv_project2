@@ -62,5 +62,4 @@ for L in lN:
 
 # reconstructs original image from Laplacian pyramid
 def pyr_reconstruct(lp):
-    rN = lp[len(lp)-1]
-    for i in range(len(lp)):
+    for i in reversed(lp):

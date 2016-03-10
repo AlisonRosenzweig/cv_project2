@@ -62,4 +62,16 @@ for L in lN:
 
 # reconstructs original image from Laplacian pyramid
 def pyr_reconstruct(lp):
-    for i in reversed(lp):
+    RN = lp[-1]
+    del lp[-1]
+    for L in reversed(lp):
+        cv2.imshow('window', RN)
+        while cv2.waitKey(5) < 0: pass
+        RNup = numpy.zeros(L.shape, dtype=numpy.float32)
+        cv2.pyrUp(RN, RNup)
+        RN = RNup + L
+
+pyr_reconstruct(lN)
+
+
+

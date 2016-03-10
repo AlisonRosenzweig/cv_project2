@@ -58,3 +58,9 @@ lN = pyr_build(image1)
 for L in lN:
     cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
     while cv2.waitKey(5) < 0: pass
+
+
+# reconstructs original image from Laplacian pyramid
+def pyr_reconstruct(lp):
+    rN = lp[len(lp)-1]
+    for i in range(len(lp)):

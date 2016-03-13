@@ -53,9 +53,10 @@ image2 = cv2.imread(imageName2)
 #lN = pyr_build(image1_gray)
 
 # Generating a Laplacian pyramid
-lN = pyr_build(image1)
+lNApple = pyr_build(image1)
+lNCrab = pyr_build(image2)
 
-for L in lN:
+for L in lNApple:
     cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
     while cv2.waitKey(5) < 0: pass
 
@@ -87,7 +88,17 @@ def pyr_reconstruct(lp):
             break
     return rebuilt[-1]
 
-rebuilt = pyr_reconstruct(lN)
-cv2.imshow('window', 0.5 + 0.5*(rebuilt / numpy.abs(rebuilt).max()))
+rebuiltApple = pyr_reconstruct(lNApple)
+cv2.imshow('window', 0.5 + 0.5*(rebuiltApple / numpy.abs(rebuiltApple).max()))
 while cv2.waitKey(5) < 0: pass
+rebuiltCrab = pyr_reconstruct(lNCrab)
 
+
+def alpha_blend(A, B, alpha):
+    A = A.astype(alpha.dtype)
+    B = B.astype(alpha.dtype)
+    # if A and B are RGB images, we must pad
+    # out alpha to be the right shape
+    if len(A.shape) == 3:
+        alpha = numpy.expand_dims(alpha, 2)
+    return A + alpha*(B-A)

@@ -68,7 +68,7 @@ def pyr_reconstruct(lp):
 
     del lp[-1]
     for L in lp[::-1]:
-        cv2.imshow('window', 0.5 + 0.5*(R / numpy.abs(R).max()))
+        cv2.imshow('window', 0.5 + 0.5*(RN / numpy.abs(RN).max()))
         while cv2.waitKey(5) < 0: pass
         cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
         while cv2.waitKey(5) < 0: pass

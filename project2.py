@@ -68,10 +68,11 @@ def pyr_reconstruct(lp):
 
     del lp[-1]
     for L in lp[::-1]:
+        #cv2.imshow('window', 0.5 + 0.5*(RN / numpy.abs(RN).max()))
         cv2.imshow('window', 0.5 + 0.5*(RN / numpy.abs(RN).max()))
         while cv2.waitKey(5) < 0: pass
-        cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
-        while cv2.waitKey(5) < 0: pass
+        #cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
+        #while cv2.waitKey(5) < 0: pass
         RNup = numpy.zeros(L.shape, dtype=numpy.float32)
         cv2.pyrUp(RN, RNup)
         RN = RNup + 0.5 + 0.5*(L / numpy.abs(L).max())
@@ -103,3 +104,5 @@ def alpha_blend(A, B, alpha):
     if len(A.shape) == 3:
         alpha = numpy.expand_dims(alpha, 2)
     return A + alpha*(B-A)
+
+

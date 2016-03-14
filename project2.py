@@ -53,27 +53,53 @@ image2 = cv2.imread(imageName2)
 #lN = pyr_build(image1_gray)
 
 # Generating a Laplacian pyramid
-lN = pyr_build(image1)
+lNApple = pyr_build(image1)
+lNCrab = pyr_build(image2)
 
-for L in lN:
+for L in lNApple:
     cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
     while cv2.waitKey(5) < 0: pass
 
 
 # reconstructs original image from Laplacian pyramid
 def pyr_reconstruct(lp):
-    R = numpy.zeros(lp[-1].shape, dtype=numpy.float32)
-    R[:] = lp[-1]
+    RN = numpy.zeros(lp[-1].shape, dtype=numpy.float32)
+    RN[:] = lp[-1]
+
     del lp[-1]
     for L in lp[::-1]:
         cv2.imshow('window', 0.5 + 0.5*(R / numpy.abs(R).max()))
         while cv2.waitKey(5) < 0: pass
         cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
         while cv2.waitKey(5) < 0: pass
-        Rup = numpy.zeros(L.shape, dtype=numpy.float32)
-        cv2.pyrUp(R, Rup)
-        R = Rup + L
+        RNup = numpy.zeros(L.shape, dtype=numpy.float32)
+        cv2.pyrUp(RN, RNup)
+        RN = RNup + 0.5 + 0.5*(L / numpy.abs(L).max())
+    
+    rebuilt = []
+    for L in reversed(lp):
+        RN = lp[-1]
+        del lp[-1]
+        Lprev = lp[-1]
+        RNup = numpy.zeros(Lprev.shape, dtype=numpy.float32)
+        cv2.pyrUp(RN, RNup)
+        RNprev = RNup + Lprev
+        rebuilt.append(RNprev)
+        if lp.index(Lprev) == 0: # break out of loop once gone through all images
+            break
+    return rebuilt[-1]
 
-pyr_reconstruct(lN)
+rebuiltApple = pyr_reconstruct(lNApple)
+cv2.imshow('window', 0.5 + 0.5*(rebuiltApple / numpy.abs(rebuiltApple).max()))
+while cv2.waitKey(5) < 0: pass
+rebuiltCrab = pyr_reconstruct(lNCrab)
 
 
+def alpha_blend(A, B, alpha):
+    A = A.astype(alpha.dtype)
+    B = B.astype(alpha.dtype)
+    # if A and B are RGB images, we must pad
+    # out alpha to be the right shape
+    if len(A.shape) == 3:
+        alpha = numpy.expand_dims(alpha, 2)
+    return A + alpha*(B-A)

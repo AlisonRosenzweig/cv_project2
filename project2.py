@@ -17,24 +17,19 @@ import sys
 #takes in an image, outputs a list of laplacian images
 def pyr_build(img):
     lp = []
-    imagesToBuildFrom = [img]
+    imagesToBuildFrom = [img.astype(numpy.float32)]
 
 
     for i in range(4):
-        h = imagesToBuildFrom[i].shape[0]
-        w = imagesToBuildFrom[i].shape[1]
         gi = imagesToBuildFrom[i];
-        gi1 = cv2.pyrDown(imagesToBuildFrom[i])
-        # Issue with specifying size of gN - want it to the be same size as orig image
-        # from imagesToBuildFrom[i]
-
+        gi1 = cv2.pyrDown(gi)
         #initializing gi_up so it will be the same size as gi
         gi1_up = numpy.zeros(gi.shape, dtype=numpy.float32)
         cv2.pyrUp(gi1, gi1_up)
-        gi_float = imagesToBuildFrom[i].astype(numpy.float32)
+        gi_float = gi.astype(numpy.float32)
         gi1_upFloat = gi1_up.astype(numpy.float32)
         li = gi_float - gi1_upFloat
-        imagesToBuildFrom.append(li)
+        imagesToBuildFrom.append(gi1)
         lp.append(li)
     
     return lp
@@ -56,20 +51,20 @@ image2 = cv2.imread(imageName2)
 #lN = pyr_build(image1_gray)
 
 # Generating a Laplacian pyramid
-lNApple = pyr_build(image1)
-lNCrab = pyr_build(image2)
+lp1 = pyr_build(image1)
+lp2 = pyr_build(image2)
 
-for L in lNApple:
+for L in lp1:
     cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
     while cv2.waitKey(5) < 0: pass
 
 
 # reconstructs original image from Laplacian pyramid
 def pyr_reconstruct(lp):
-    RN = numpy.zeros(lp[-1].shape, dtype=numpy.float32)
-    RN[:] = lp[-1]
+    # ri = numpy.zeros(lp[-1].shape, dtype=numpy.float32)
+    # ri[:] = lp[-1]
 
-    del lp[-1]
+    # del lp[-1]
 
     # for L in lp[::-1]:
     #     #cv2.imshow('window', 0.5 + 0.5*(RN / numpy.abs(RN).max()))
@@ -82,25 +77,37 @@ def pyr_reconstruct(lp):
     #     RN = RNup + 0.5 + 0.5*(L / numpy.abs(L).max())
     
     rebuilt = []
+    rebuilt.append(lp[-1])
+    del lp[-1]
     for L in reversed(lp):
-        RN = lp[-1]
-        del lp[-1]
+        ri = rebuilt[-1]
+        #ri = lp[-1]
+        
+        #Lprev (L i-1 in handout) is the next to last image in pyramid, now last after deletion
         Lprev = lp[-1]
-        RNup = numpy.zeros(Lprev.shape, dtype=numpy.float32)
-        cv2.pyrUp(RN, RNup)
-        RNprev = RNup + Lprev
-        rebuilt.append(RNprev)
-        if lp.index(Lprev) == 0: # break out of loop once gone through all images
-            break
+        del lp[-1]
+        #declare ri to have same size as Lprev
+        ri_up = numpy.zeros(Lprev.shape, dtype=numpy.float32)
+        cv2.pyrUp(ri, ri_up)
+        ri_prev = ri_up + Lprev
+        rebuilt.append(ri_prev)
+        #display for debugging purposes
+        cv2.imshow('window', 0.5 + 0.5*(ri / numpy.abs(L).max()))
+        while cv2.waitKey(5) < 0: pass
+        #if lp[0] == Lprev: # break out of loop once gone through all images
+        #   break
     return rebuilt[-1]
 
-rebuiltApple = pyr_reconstruct(lNApple)
+
+rebuilt1 = pyr_reconstruct(lp1)
 #convert to ints before returning/displaying
-cv2.imshow('window', (rebuiltApple / numpy.abs(rebuiltApple).max()).astype(numpy.uint8))
+r1_clipped = numpy.clip(rebuilt1, 0, 255)
+r1_int = r1_clipped.astype(numpy.uint8)
+
+cv2.imshow('window', r1_int)
 while cv2.waitKey(5) < 0: pass
-cv2.imshow('window', 0.5 + 0.5*(rebuiltApple / numpy.abs(rebuiltApple).max()))
-while cv2.waitKey(5) < 0: pass
-rebuiltCrab = pyr_reconstruct(lNCrab)
+
+rebuilt2 = pyr_reconstruct(lp2)
 
 
 def alpha_blend(A, B, alpha):

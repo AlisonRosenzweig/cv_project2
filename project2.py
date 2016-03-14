@@ -23,14 +23,17 @@ def pyr_build(img):
     for i in range(4):
         h = imagesToBuildFrom[i].shape[0]
         w = imagesToBuildFrom[i].shape[1]
-        gN = cv2.pyrDown(imagesToBuildFrom[i])
+        gi = imagesToBuildFrom[i];
+        gi1 = cv2.pyrDown(imagesToBuildFrom[i])
         # Issue with specifying size of gN - want it to the be same size as orig image
         # from imagesToBuildFrom[i]
-        gNlarge = numpy.zeros(gN.shape, dtype=numpy.float32)
-        cv2.pyrUp(gN, gNlarge)
-        gNfloat = gN.astype(numpy.float32)
-        gNlargeFloat = gNlarge.astype(numpy.float32)
-        li = gNfloat - gNlargeFloat
+
+        #initializing gi_up so it will be the same size as gi
+        gi1_up = numpy.zeros(gi.shape, dtype=numpy.float32)
+        cv2.pyrUp(gi1, gi1_up)
+        gi_float = imagesToBuildFrom[i].astype(numpy.float32)
+        gi1_upFloat = gi1_up.astype(numpy.float32)
+        li = gi_float - gi1_upFloat
         imagesToBuildFrom.append(li)
         lp.append(li)
     
@@ -67,15 +70,16 @@ def pyr_reconstruct(lp):
     RN[:] = lp[-1]
 
     del lp[-1]
-    for L in lp[::-1]:
-        #cv2.imshow('window', 0.5 + 0.5*(RN / numpy.abs(RN).max()))
-        cv2.imshow('window', 0.5 + 0.5*(RN / numpy.abs(RN).max()))
-        while cv2.waitKey(5) < 0: pass
-        #cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
-        #while cv2.waitKey(5) < 0: pass
-        RNup = numpy.zeros(L.shape, dtype=numpy.float32)
-        cv2.pyrUp(RN, RNup)
-        RN = RNup + 0.5 + 0.5*(L / numpy.abs(L).max())
+
+    # for L in lp[::-1]:
+    #     #cv2.imshow('window', 0.5 + 0.5*(RN / numpy.abs(RN).max()))
+    #     cv2.imshow('window', 0.5 + 0.5*(RN / numpy.abs(RN).max()))
+    #     while cv2.waitKey(5) < 0: pass
+    #     #cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
+    #     #while cv2.waitKey(5) < 0: pass
+    #     RNup = numpy.zeros(L.shape, dtype=numpy.float32)
+    #     cv2.pyrUp(RN, RNup)
+    #     RN = RNup + 0.5 + 0.5*(L / numpy.abs(L).max())
     
     rebuilt = []
     for L in reversed(lp):
@@ -91,6 +95,9 @@ def pyr_reconstruct(lp):
     return rebuilt[-1]
 
 rebuiltApple = pyr_reconstruct(lNApple)
+#convert to ints before returning/displaying
+cv2.imshow('window', (rebuiltApple / numpy.abs(rebuiltApple).max()).astype(numpy.uint8))
+while cv2.waitKey(5) < 0: pass
 cv2.imshow('window', 0.5 + 0.5*(rebuiltApple / numpy.abs(rebuiltApple).max()))
 while cv2.waitKey(5) < 0: pass
 rebuiltCrab = pyr_reconstruct(lNCrab)

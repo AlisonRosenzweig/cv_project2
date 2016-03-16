@@ -14,25 +14,60 @@ import math
 import cvk2
 import sys
 
+pyrSize = 4
+
 #takes in an image, outputs a list of laplacian images
 def pyr_build(img):
-    lp = []
+    #lp = []
+    last = pyrSize - 1;
     imagesToBuildFrom = [img.astype(numpy.float32)]
-
-
-    for i in range(4):
-        gi = imagesToBuildFrom[i];
+    #first build the array images to build from 
+    for i in range(pyrSize):
+        gi = imagesToBuildFrom[i]
         gi1 = cv2.pyrDown(gi)
-        #initializing gi_up so it will be the same size as gi
-        gi1_up = numpy.zeros(gi.shape, dtype=numpy.float32)
-        cv2.pyrUp(gi1, gi1_up)
-        gi_float = gi.astype(numpy.float32)
-        gi1_upFloat = gi1_up.astype(numpy.float32)
-        li = gi_float - gi1_upFloat
         imagesToBuildFrom.append(gi1)
+
+
+    lp = [imagesToBuildFrom[last]]
+
+    # #now build the actual pyramid from that array
+    for i in range(pyrSize):
+        gi = imagesToBuildFrom[i] #go through the array backwards
+        gi1 = imagesToBuildFrom[i+1]
+        gi1_up = numpy.zeros(gi.shape, dtype=numpy.float32)
+        cv2.pyrUp(gi, gi1_up)
+        li = gi - gi1_up;
         lp.append(li)
-    
+        cv2.imshow('window', 0.5 + 0.5*(li / numpy.abs(li).max()))
+        while cv2.waitKey(5) < 0: pass
+
+    # for i in range(pyrSize):
+    #     gi1_up = numpy.zeros(imagesToBuildFrom[-i-1].shape, dtype=numpy.float32)
+    #     cv2.pyrUp(imagesToBuildFrom[-i], gi1_up)
+    #     L = cv2.subtract(imagesToBuildFrom[-i-1], gi1_up)
+    #     lp.append(L)
+    #     cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
+    #     while cv2.waitKey(5) < 0: pass
+
+
+    # lp = []
+    # for i in range(pyrSize-1):
+    #     gi = imagesToBuildFrom[i];
+    #     gi1 = cv2.pyrDown(gi)
+    #     imagesToBuildFrom.append(gi1)
+    #     #initializing gi_up so it will be the same size as gi
+    #     gi1_up = numpy.zeros(gi.shape, dtype=numpy.float32)
+    #     cv2.pyrUp(gi1, gi1_up)
+    #     gi_float = gi.astype(numpy.float32)
+    #     gi1_upFloat = gi1_up.astype(numpy.float32)
+    #     li = gi_float - gi1_upFloat
+    #     #imagesToBuildFrom.append(gi1) moved this line up arbitrarily
+    #     lp.append(li)
+
+    print len(lp)
+    lp.reverse()
     return lp
+
 
 
 #make sure there are enough commandline args
@@ -54,27 +89,16 @@ image2 = cv2.imread(imageName2)
 lp1 = pyr_build(image1)
 lp2 = pyr_build(image2)
 
+i=0
 for L in lp1:
+    print i
+    i+=1
     cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
     while cv2.waitKey(5) < 0: pass
 
 
 # reconstructs original image from Laplacian pyramid
 def pyr_reconstruct(lp):
-    # ri = numpy.zeros(lp[-1].shape, dtype=numpy.float32)
-    # ri[:] = lp[-1]
-
-    # del lp[-1]
-
-    # for L in lp[::-1]:
-    #     #cv2.imshow('window', 0.5 + 0.5*(RN / numpy.abs(RN).max()))
-    #     cv2.imshow('window', 0.5 + 0.5*(RN / numpy.abs(RN).max()))
-    #     while cv2.waitKey(5) < 0: pass
-    #     #cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
-    #     #while cv2.waitKey(5) < 0: pass
-    #     RNup = numpy.zeros(L.shape, dtype=numpy.float32)
-    #     cv2.pyrUp(RN, RNup)
-    #     RN = RNup + 0.5 + 0.5*(L / numpy.abs(L).max())
     
     rebuilt = []
     rebuilt.append(lp[-1])

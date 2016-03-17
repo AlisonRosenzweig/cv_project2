@@ -14,7 +14,7 @@ import math
 import cvk2
 import sys
 
-pyrSize = 6
+pyrSize = 8
 
 win = 'window'
 cv2.namedWindow(win)
@@ -32,10 +32,10 @@ def getPoints(w, filename, source):
 		w.save(filename)
 
 def makeMask(img, e):
-	mask = numpy.zeros(img.shape, 'float32')
+	mask = numpy.ones(img.shape, 'float32')
 	h = img.shape[0]
 	w = img.shape[1]
-	cv2.ellipse(mask, (int(e.center[0]), int(e.center[1])), (int(e.u), int(e.v)), int(e.angle), 0, 360, (1, 1, 1),-1)
+	cv2.ellipse(mask, (int(e.center[0]), int(e.center[1])), (int(e.u), int(e.v)), int(e.angle), 0, 360, (0, 0, 0), -1)
 	# cv2.ellipse(mask, (e.center[0], e.center[1]), (e.u, e.v), 
 	#         e.ange, 0, 360, (255, 255, 255), -1)
 	cv2.imshow('window', mask)
@@ -106,7 +106,7 @@ def pyr_build(pic):
 	Input: pic - 8-bit or grayscale image
 	Returns: lp - list of pyramids
 	"""
-	depth = 7
+	depth = pyrSize-1
 	pyrDowns = [pic]
 	pyrUps = [None]
 	lp = []
@@ -124,8 +124,12 @@ def pyr_build(pic):
 	for i in range(depth):
 		temp = pyrDowns[i].astype('float32') - pyrUps[i+1].astype('float32')
 		lp.append(temp)
+		# cv2.imshow('window', 0.5 + 0.5*(temp / numpy.abs(temp).max()))
+		# while cv2.waitKey(5) < 0: pass
 
 	lp.append(pyrDowns[depth].astype("float32"))
+
+
 
 	return lp
 
@@ -134,31 +138,21 @@ def pyr_build(pic):
 def pyr_reconstruct(lst):
 
 	lp = lst[:]
-	rebuilt = []
-	rebuilt.append(lp[-1])
-	del lp[-1]
+	rebuilt = [lp[-1]]
 
+	#note that this makes it so the indexing is reverse of that in the 
+	#assignment sheet - ie r0 is smallest = (l reversed)0
+	lp.reverse()
 
-	#for L in reversed(lp):
-	for i in range(len(lp)):
-		ri = rebuilt[-1]
-		Lprev = 
-		# ri = rebuilt[-1]
-		# #ri = lp[-1]
-		
-		# #Lprev (L i-1 in handout) is the next to last image in pyramid, now last after deletion
-		# Lprev = lp[-1]
-		# del lp[-1]
-		# #declare ri to have same size as Lprev
-		# ri_up = numpy.zeros(Lprev.shape, dtype=numpy.float32)
-		# cv2.pyrUp(ri, ri_up)
-		# ri_prev = ri_up + Lprev
-		# rebuilt.append(ri_prev)
-		# #display for debugging purposes
-		# # cv2.imshow('window', 0.5 + 0.5*(ri / numpy.abs(L).max()))
-		# # while cv2.waitKey(5) < 0: pass
+	for i in range(0, len(lp)-1):
+		Lprev = lp[i+1]
+		ri_up = numpy.zeros(Lprev.shape, dtype=numpy.float32)
+		cv2.pyrUp(rebuilt[i], ri_up, (ri_up.shape[0], ri_up.shape[1]))
+		ri_prev = ri_up + Lprev
+		rebuilt.append(ri_prev)
 
-	return rebuilt[-1]
+	toRet = numpy.clip(rebuilt[-1], 0, 255)
+	return toRet.astype(numpy.uint8)
 
 # def pyr_reconstruct(lp):
 # 	"""
@@ -230,19 +224,18 @@ rebuilt2 = pyr_reconstruct(lp2)
 
 
 mergedPyr = []
-#TODO: get rid of this once the pyramid works correctly
 for i in range(len(lp1)):
 	mask = cv2.resize(mask, (lp1[i].shape[1], lp1[i].shape[0]))
-	levelMerge = alpha_blend(lp2[i], lp1[i], mask)
+	levelMerge = alpha_blend(lp1[i], lp2[i], mask)
 	mergedPyr.append(levelMerge)
 
 
 merged = pyr_reconstruct(mergedPyr)
 
-merged_clipped = numpy.clip(merged, 0, 255)
-merged_int = merged_clipped.astype(numpy.uint8)
+#merged_clipped = numpy.clip(merged, 0, 255)
+#merged_int = merged_clipped.astype(numpy.uint8)
 
-cv2.imshow('window', merged_int)
+cv2.imshow('window', merged)
 while cv2.waitKey(5) < 0: pass
 
 

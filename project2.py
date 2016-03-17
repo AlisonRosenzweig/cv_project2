@@ -75,63 +75,63 @@ def alignAndMakeMask(img1, img2):
 	while cv2.waitKey(5) < 0: pass
 	return warped1, mask
 
-# takes in an image, outputs a list of laplacian images
-# def pyr_build(img):
-# 	#lp = []
-# 	imagesToBuildFrom = [img.astype(numpy.float32)]
-# 	#first build the array images to build from 
-# 	for i in range(pyrSize):
-# 		gi = imagesToBuildFrom[i]
-# 		gi1 = cv2.pyrDown(gi)
-# 		imagesToBuildFrom.append(gi1)
-# 		cv2.imshow('window', 0.5 + 0.5*(gi1 / numpy.abs(gi1).max()))
-# 		while cv2.waitKey(5) < 0: pass
+#takes in an image, outputs a list of laplacian images
+def pyr_build(img):
+	#lp = []
+	G = [img.astype('float32')]
+	#first build the array images to build from 
+	for i in range(pyrSize-1):
+		gi1 = cv2.pyrDown(G[i])
+		G.append(gi1)
+		cv2.imshow('window', 0.5 + 0.5*(gi1 / numpy.abs(gi1).max()))
+		while cv2.waitKey(5) < 0: pass
 
-
-# 	lp = []
-
-# 	#now build the actual pyramid from that array
-# 	for i in range(pyrSize):
-# 		gi1_up = numpy.zeros(imagesToBuildFrom[-i-1].shape, dtype=numpy.float32)
-# 		cv2.pyrUp(imagesToBuildFrom[-i], gi1_up)
-# 		L = cv2.subtract(imagesToBuildFrom[-i-1], gi1_up)
-# 		lp.append(L.astype(numpy.float32))
-
-# 	lp.reverse()
-# 	return lp
-
-def pyr_build(pic):
-	"""
-	Generates Laplacian pyramids for a given pic
-	Input: pic - 8-bit or grayscale image
-	Returns: lp - list of pyramids
-	"""
-	depth = pyrSize-1
-	pyrDowns = [pic]
-	pyrUps = [None]
+	print len(G)
 	lp = []
 
-	# generate pyrDowns
-	for i in range(1, depth+1):
-		pyrDowns.append(cv2.pyrDown(pyrDowns[i-1]))
-
-	# generate pyrUps
-	for i in range(1, depth + 1):
-		downShape = pyrDowns[i-1].shape
-		w, h = (downShape[0], downShape[1])
-		pyrUps.append(cv2.pyrUp(pyrDowns[i], None, (w, h)))
-	
-	for i in range(depth):
-		temp = pyrDowns[i].astype('float32') - pyrUps[i+1].astype('float32')
-		lp.append(temp)
-		# cv2.imshow('window', 0.5 + 0.5*(temp / numpy.abs(temp).max()))
-		# while cv2.waitKey(5) < 0: pass
-
-	lp.append(pyrDowns[depth].astype("float32"))
-
-
+	#now build the actual pyramid from that array
+	for i in range(0, pyrSize):
+		gi1_up = numpy.zeros(G[i].shape, dtype=numpy.float32)
+		cv2.pyrUp(G[i+1], gi1_up)
+		L = G[i] - gi1_up
+		lp.append(L)
+		cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
+		while cv2.waitKey(5) < 0: pass
 
 	return lp
+
+# def pyr_build(pic):
+# 	"""
+# 	Generates Laplacian pyramids for a given pic
+# 	Input: pic - 8-bit or grayscale image
+# 	Returns: lp - list of pyramids
+# 	"""
+# 	depth = pyrSize-1
+# 	pyrDowns = [pic]
+# 	pyrUps = [None]
+# 	lp = []
+
+# 	# generate pyrDowns
+# 	for i in range(1, depth+1):
+# 		pyrDowns.append(cv2.pyrDown(pyrDowns[i-1]))
+
+# 	# generate pyrUps
+# 	for i in range(1, depth + 1):
+# 		downShape = pyrDowns[i-1].shape
+# 		w, h = (downShape[0], downShape[1])
+# 		pyrUps.append(cv2.pyrUp(pyrDowns[i], None, (w, h)))
+	
+# 	for i in range(depth):
+# 		temp = pyrDowns[i].astype('float32') - pyrUps[i+1].astype('float32')
+# 		lp.append(temp)
+# 		cv2.imshow('window', 0.5 + 0.5*(temp / numpy.abs(temp).max()))
+# 		while cv2.waitKey(5) < 0: pass
+
+# 	lp.append(pyrDowns[depth].astype("float32"))
+
+
+
+# 	return lp
 
 
 # reconstructs original image from Laplacian pyramid
@@ -153,31 +153,6 @@ def pyr_reconstruct(lst):
 
 	toRet = numpy.clip(rebuilt[-1], 0, 255)
 	return toRet.astype(numpy.uint8)
-
-# def pyr_reconstruct(lp):
-# 	"""
-# 	Reconstructs a picture given its laplacian pyramids
-	
-# 	Input: lp - list of laplacian pyramids
-# 	Returns: None (just displays picture)
-# 	"""
-# 	temps = []
-# 	n = len(lp)
-
-# 	# initialize list
-# 	for item in lp:
-# 		temps.append(None)
-# 	temps[n-1] = lp[n-1]
-
-# 	# work backwards to reconstruct
-# 	for i in range(n-2, -1, -1):
-
-# 		w, h, _ = lp[i].shape
-# 		temps[i] = cv2.pyrUp(temps[i+1], None, (w, h)) + lp[i]
-
-# 	temps[0] = (numpy.clip(temps[0], 0, 255)) # handles overflow
-# 	return temps[0].astype('uint8')
-
 
 def alpha_blend(A, B, alpha):
 	A = A.astype(alpha.dtype)
@@ -232,6 +207,7 @@ for i in range(len(lp1)):
 
 merged = pyr_reconstruct(mergedPyr)
 
+#doing this earlier now (in pyr_reconstruct)
 #merged_clipped = numpy.clip(merged, 0, 255)
 #merged_int = merged_clipped.astype(numpy.uint8)
 

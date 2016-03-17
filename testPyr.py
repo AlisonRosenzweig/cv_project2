@@ -1,7 +1,7 @@
 import cv2
 import numpy as np,sys
 
-A = cv2.imread('einstein.jpeg')
+A = cv2.imread('eye.jpg')
 # generate Gaussian pyramid for A
 G = A.copy()
 gpA = [G]

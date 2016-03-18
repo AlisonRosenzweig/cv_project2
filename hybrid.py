@@ -16,8 +16,8 @@ import sys
 
 win = 'hw2'
 cv2.namedWindow(win)
-sigmaSmall = 2
-sigmaBig = 10
+sigmaSmall = 5 
+sigmaBig = 15 
 
 def lopass(img, sigma):
 	img = img.astype(numpy.float32)

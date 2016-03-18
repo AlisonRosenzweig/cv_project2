@@ -36,8 +36,6 @@ def makeMask(img, e):
 	h = img.shape[0]
 	w = img.shape[1]
 	cv2.ellipse(mask, (int(e.center[0]), int(e.center[1])), (int(e.u), int(e.v)), int(e.angle), 0, 360, (0, 0, 0), -1)
-	# cv2.ellipse(mask, (e.center[0], e.center[1]), (e.u, e.v), 
-	#         e.ange, 0, 360, (255, 255, 255), -1)
 	cv2.imshow('window', mask)
 	while cv2.waitKey(5) < 0: pass
 	return mask
@@ -78,13 +76,11 @@ def alignAndMakeMask(img1, img2):
 #takes in an image, outputs a list of laplacian images
 def pyr_build(img):
 	#lp = []
-	G = [img.astype('float32')]
+	G = [img.astype(numpy.float32)]
 	#first build the array images to build from 
 	for i in range(pyrSize-1):
 		gi1 = cv2.pyrDown(G[i])
 		G.append(gi1)
-		cv2.imshow('window', 0.5 + 0.5*(gi1 / numpy.abs(gi1).max()))
-		while cv2.waitKey(5) < 0: pass
 
 	print len(G)
 	lp = []
@@ -92,12 +88,11 @@ def pyr_build(img):
 	#now build the actual pyramid from that array
 	for i in range(0, pyrSize-1):
 		h, w, d = G[i].shape
-		gi1_up = numpy.zeros((h, w, d), dtype=numpy.float32)
-		cv2.pyrUp(G[i+1], gi1_up, (h, w))
+		gi1_up = cv2.pyrUp(G[i+1], None, (h, w))
 		L = G[i] - gi1_up
 		lp.append(L)
-		cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
-		while cv2.waitKey(5) < 0: pass
+		# cv2.imshow('window', 0.5 + 0.5*(L / numpy.abs(L).max()))
+		# while cv2.waitKey(5) < 0: pass
 
 	#L[N] = G[N]
 	lp.append(G[-1]) 
@@ -134,6 +129,7 @@ def alpha_blend(A, B, alpha):
 		alpha = numpy.expand_dims(alpha, 2)
 
 	return A + alpha*(B-A)
+
 
 #make sure there are enough commandline args
 if len(sys.argv) < 3:
@@ -183,6 +179,8 @@ merged = pyr_reconstruct(mergedPyr)
 
 cv2.imshow('window', merged)
 while cv2.waitKey(5) < 0: pass
+
+cv2.imwrite('merged.jpg', merged)
 
 
 
